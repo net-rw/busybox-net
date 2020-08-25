@@ -98,12 +98,12 @@ enum {
 	OPT_t = 1 << 13,
 	OPT_S = 1 << 14,
 	OPT_A = 1 << 15,
-	OPT_O = 1 << 16,
-	OPT_o = 1 << 17,
-	OPT_x = 1 << 18,
-	OPT_f = 1 << 19,
-	OPT_B = 1 << 20,
-	OPT_L = 1 << 21,
+	OPT_L = (OPT_A << 1),
+	OPT_O = (OPT_L << 1),
+	OPT_o = (OPT_O << 1),
+	OPT_x = (OPT_o << 1),
+	OPT_f = (OPT_x << 1),
+	OPT_B = (OPT_f << 1), /* 21 */
 /* The rest has variable bit positions, need to be clever */
 	OPTBIT_B = 21,
 	USE_FOR_MMU(             OPTBIT_b,)
@@ -1800,13 +1800,11 @@ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
 				/* future renew failures should not exit (JM) */
 				opt &= ~OPT_n;
 #if BB_MMU /* NOMMU case backgrounded earlier */
-#if 0 /* FIXME: it doesn't work */
 				if (!(opt & OPT_f)) {
 					client_background();
 					/* do not background again! */
 					opt = ((opt & ~OPT_b) | OPT_f);
 				}
-#endif
 #endif
 				/* make future renew packets use different xid */
 				/* xid = random_xid(); ...but why bother? */
