@@ -103,8 +103,9 @@ enum {
 	OPT_x = 1 << 18,
 	OPT_f = 1 << 19,
 	OPT_B = 1 << 20,
+	OPT_L = 1 << 21,
 /* The rest has variable bit positions, need to be clever */
-	OPTBIT_B = 20,
+	OPTBIT_B = 21,
 	USE_FOR_MMU(             OPTBIT_b,)
 	IF_FEATURE_UDHCPC_ARPING(OPTBIT_a,)
 	IF_FEATURE_UDHCP_PORT(   OPTBIT_P,)
@@ -1276,7 +1277,7 @@ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
 	/* Parse command line */
 	opt = getopt32long(argv, "^"
 		/* O,x: list; -T,-t,-A take numeric param */
-		"CV:H:h:F:i:np:qRr:s:T:+t:+SA:+O:*ox:*fB"
+		"CV:H:h:F:i:np:qRr:s:T:+t:+SA:L:+O:*ox:*fB"
 		USE_FOR_MMU("b")
 		IF_FEATURE_UDHCPC_ARPING("a::")
 		IF_FEATURE_UDHCP_PORT("P:")
@@ -1288,6 +1289,7 @@ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
 		, &str_r /* r */
 		, &client_data.script /* s */
 		, &discover_timeout, &discover_retries, &tryagain_timeout /* T,t,A */
+		, &G.forcelease /* L */
 		, &list_O
 		, &list_x
 		IF_FEATURE_UDHCPC_ARPING(, &str_a)
@@ -1738,6 +1740,8 @@ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
 					//^^^not necessary since "timeout = lease_seconds / 2"
 					//does not overflow even for 0xffffffff.
 				}
+				if (G.forcelease > 10)
+					lease_seconds = G.forcelease;
 #if ENABLE_FEATURE_UDHCPC_ARPING
 				if (opt & OPT_a) {
 /* RFC 2131 3.1 paragraph 5:
@@ -1796,11 +1800,13 @@ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
 				/* future renew failures should not exit (JM) */
 				opt &= ~OPT_n;
 #if BB_MMU /* NOMMU case backgrounded earlier */
+#if 0 /* FIXME: it doesn't work */
 				if (!(opt & OPT_f)) {
 					client_background();
 					/* do not background again! */
 					opt = ((opt & ~OPT_b) | OPT_f);
 				}
+#endif
 #endif
 				/* make future renew packets use different xid */
 				/* xid = random_xid(); ...but why bother? */

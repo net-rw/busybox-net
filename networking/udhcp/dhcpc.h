@@ -29,10 +29,13 @@ struct client_data_t {
 	int sockfd;
 	smallint listen_mode;
 	smallint state;
+
+	uint32_t forcelease;
 } FIX_ALIASING;
 
 /* server_config sits in 1st half of bb_common_bufsiz1 */
 #define client_data (*(struct client_data_t*)(&bb_common_bufsiz1[COMMON_BUFSIZE / 2]))
+#define G client_data
 
 #if ENABLE_FEATURE_UDHCP_PORT
 #define CLIENT_PORT  (client_data.port)
